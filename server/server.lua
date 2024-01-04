@@ -53,7 +53,8 @@ MySQL.ready(function()
                 '`zone` varchar(50) NOT NULL,' ..
                 '`owner` varchar(46) DEFAULT NULL,' ..
                 '`alliance` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT \'[]\',' ..
-                '`points` int(11) NOT NULL' ..
+                '`points` int(11) NOT NULL,' ..
+                '`locked` int(11) NOT NULL DEFAULT 0' ..
                 ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci',
                 {}
             );

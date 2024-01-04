@@ -1,0 +1,11 @@
+{
+  "folders": [],
+  "settings": {
+    "Lua.workspace.library": [
+      "d:\\txData\\LaursenDev.base\\resources\\[ox]\\ox_lib",
+      "d:\\txData\\LaursenDev.base\\resources\\[standalone]\\oxmysql",
+      "c:\\Users\\Laursen\\.vscode\\extensions\\knoblauchbrot.esx-vscode-2.4.0\\Lua\\misc",
+      "c:\\Users\\Laursen\\.vscode\\extensions\\knoblauchbrot.esx-vscode-2.4.0\\Lua\\esx"
+    ]
+  }
+}

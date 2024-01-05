@@ -3,7 +3,7 @@ function ZoneMenu()
 
     local options = {}
 
-    if #options == 0 then
+    if #ownedZones == 0 then
         table.insert(options, {
             title = "Ingen zoner",
             description = "Du ejer ingen zoner",

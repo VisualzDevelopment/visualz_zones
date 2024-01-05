@@ -28,12 +28,20 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(300000)
+        Wait(5000)
 
         for _, zone in pairs(Zones) do
-            -- // TODO: Check when there was last sold in the zone
+            local zoneLastTimeSold = ESX.Math.Round(zone.last_time_sold / 1000, 0)
+            local reducePointsTimerInSec = (Config.ReducePointsTimer * 60) * 60
 
-            -- // TODO: If there was NOT sold in the zone for "Config Seconds or Minutes" then remove "Config Points" from the zone and update the database
+            if zoneLastTimeSold + reducePointsTimerInSec <= os.time() then
+                if zone.points > 0 then
+                    zone.points = zone.points - Config.PointsRemoveAmount
+                    MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
+                        zone.points, zone.zone
+                    })
+                end
+            end
         end
     end
 end)
@@ -262,10 +270,9 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                     end
                     v.points = 1
                     v.owner = gang
-                    local didOwnerUpdate = MySQL.update.await(
-                        'UPDATE visualz_zones SET owner = ?, points = ? WHERE zone = ?', {
-                            gang, v.points, zone
-                        })
+                    local didOwnerUpdate = MySQL.update.await('UPDATE visualz_zones SET owner = ?, points = ? WHERE zone = ?', {
+                        gang, v.points, zone
+                    })
                     if didOwnerUpdate then
                         local discordMessage =
                             "**Spillerens navn:** " .. xPlayer.getName() .. "\n" ..
@@ -304,12 +311,10 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                             if tPlayer then
                                 local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(tPlayer.source)
                                 if phoneNumber then
-                                    local message = 'Der er nogle der sælger stoffer i ' ..
-                                        zoneName .. ' - ' .. Config.Zones[zone] .. '!'
+                                    local message = 'Der er nogle der sælger stoffer i ' .. zoneName .. ' - ' .. Config.Zones[zone] .. '!'
                                     local coords = xPlayer.getCoords(true)
                                     exports["lb-phone"]:SendMessage(Config.PhoneContactName, phoneNumber, message)
-                                    exports["lb-phone"]:SendCoords(Config.PhoneContactName, phoneNumber,
-                                        vector2(coords.x, coords.y))
+                                    exports["lb-phone"]:SendCoords(Config.PhoneContactName, phoneNumber, vector2(coords.x, coords.y))
                                 end
                             end
                         end
@@ -317,11 +322,10 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                 end
             end
 
-            if v.points ~= Config.MaximumPoints then
-                MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
-                    v.points, zone
-                })
-            end
+            v.last_time_sold = os.time() * 1000
+            MySQL.update.await('UPDATE visualz_zones SET points = ?, last_time_sold = ? WHERE zone = ?', {
+                v.points, os.date("%Y-%m-%d %H:%M:%S"), zone
+            })
         end
     end
 
@@ -1383,3 +1387,5 @@ function SendLog(WebHook, color, title, message, footer)
         }),
         { ['Content-Type'] = 'application/json' })
 end
+
+exports("AddPoints", AddPoints)

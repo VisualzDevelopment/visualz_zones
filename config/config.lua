@@ -12,6 +12,7 @@ Config.PopularDrugMultiplier = 1.05
 Config.OwnedZoneMultiplier = 1.1
 
 -- Math Example: Config.ReducePointsAmount = 1
+-- Note: This is per 10 minutes and will be rounded to the nearest whole number
 
 -- Per minute: Config.Config.ReducePointsAmount / Config.ReducePointsCheck = 0.1
 -- Per hour: 60 / 10 * Config.ReducePointsAmount = 6

@@ -3,40 +3,43 @@ function ZoneMenu()
 
     local options = {}
 
-    for _, v in pairs(ownedZones) do
-        table.insert(options, {
-            icon = "map-location-dot",
-            title = Config.Zones[v.zone] .. " - " .. v.zone,
-            description = "Zonen har opnået " .. v.points .. "/" .. Config.MaximumPoints .. " points",
-            progress = v.points / Config.MaximumPoints * 100,
-            colorScheme = "blue",
-            onSelect = function()
-                OpenZone(v)
-            end
-        })
-    end
-
     if #options == 0 then
         table.insert(options, {
             title = "Ingen zoner",
             description = "Du ejer ingen zoner",
             readOnly = true,
         })
+    else
+        for _, v in pairs(ownedZones) do
+            table.insert(options, {
+                icon = "map-location-dot",
+                title = Config.Zones[v.zone] .. " - " .. v.zone,
+                description = "Zonen har opnået " .. v.points .. "/" .. Config.MaximumPoints .. " points",
+                progress = v.points / Config.MaximumPoints * 100,
+                colorScheme = "blue",
+                onSelect = function()
+                    OpenZone(v)
+                end
+            })
+        end
     end
 
     table.sort(options, function(a, b)
         return a.title < b.title
     end)
+
     table.insert(options, {
         title = "",
         description = "   ‎   ‎   ‎   ‎   ‎   ‎  Visualz Development | Visualz.dk",
         readOnly = true,
     })
+
     lib.registerContext({
         id = 'zone_menu',
         title = 'Dine zoner',
         options = options
     })
+
     lib.showContext('zone_menu')
 end
 
@@ -48,7 +51,9 @@ function AdminZone()
             description = 'Du har ikke adgang til denne kommando'
         })
     end
+
     local zones = lib.callback.await('visualz_zones:GetAdminZones')
+
     local options = {}
     for _, v in pairs(zones) do
         local owner = v.owner == nil and "Ingen" or v.owner
@@ -63,19 +68,23 @@ function AdminZone()
             end
         })
     end
+
     table.sort(options, function(a, b)
         return a.title < b.title
     end)
+
     table.insert(options, {
         title = "",
         description = "   ‎   ‎   ‎   ‎   ‎   ‎  Visualz Development | Visualz.dk",
         readOnly = true,
     })
+
     lib.registerContext({
         id = 'admin_zone_menu',
         title = 'Admin zoner',
         options = options
     })
+
     lib.showContext('admin_zone_menu')
 end
 
@@ -87,6 +96,7 @@ function OpenZoneAdmin(zone)
             description = 'Du har ikke adgang til denne kommando'
         })
     end
+
     local owner = zone.owner == nil and "Ingen" or zone.owner
     local lockedIcon = zone.locked == 1 and 'fa-solid fa-toggle-on' or 'fa-solid fa-toggle-off'
     local lockedDescription = zone.locked == 1 and 'Klik for at åbne zonen' or 'Klik for at låse zonen'
@@ -166,8 +176,11 @@ function OpenAdminAlliances(zone)
             description = 'Du har ikke adgang til denne kommando'
         })
     end
+
     local options = {}
+
     local alliances = lib.callback.await('visualz_zones:GetAlliances', false, zone.zone)
+
     if alliances ~= nil then
         for k, v in pairs(alliances) do
             table.insert(options, {
@@ -201,6 +214,7 @@ function OpenAdminAlliances(zone)
         menu = 'admin_specific_zone_menu',
         options = options
     })
+
     lib.showContext('alliance_menu')
 end
 
@@ -220,7 +234,7 @@ function AdminAddAlliance(zone)
     })
 
     if not input then
-        OpenAdminAlliances(zone)
+        return OpenAdminAlliances(zone)
     end
 
     if input[2] == "" then
@@ -248,6 +262,7 @@ function AdminRemoveAlliance(zone, gang, label)
             description = 'Du har ikke adgang til denne kommando'
         })
     end
+
     local alert = lib.alertDialog({
         header = 'Fjern Alliance',
         content = 'Er du sikker på du vil fjerne denne alliance?\n\nBande: ' ..
@@ -255,6 +270,7 @@ function AdminRemoveAlliance(zone, gang, label)
         centered = true,
         cancel = true
     })
+
     if alert == 'confirm' then
         local response = lib.callback.await('visualz_zones:AdminRemoveAlliance', false, zone.zone, gang)
         lib.notify({
@@ -262,6 +278,7 @@ function AdminRemoveAlliance(zone, gang, label)
             description = response.description
         })
     end
+
     OpenAdminAlliances(zone)
 end
 
@@ -281,7 +298,7 @@ function AdminTransferZone(zone)
     })
 
     if not input then
-        AdminZone()
+        return AdminZone()
     end
 
     if input[2] == "" then
@@ -317,6 +334,7 @@ function AdminResetZone(zone)
         centered = true,
         cancel = true
     })
+
     if alert == 'confirm' then
         local response = lib.callback.await('visualz_zones:AdminResetZone', false, zone.zone)
         lib.notify({
@@ -324,6 +342,7 @@ function AdminResetZone(zone)
             description = response.description
         })
     end
+
     AdminZone()
 end
 
@@ -344,7 +363,7 @@ function AdminSetPoint(zone)
     })
 
     if not input then
-        AdminZone()
+        return AdminZone()
     end
 
     if input[3] == "" then
@@ -372,9 +391,11 @@ function AdminToggleZone(zone, locked)
             description = 'Du har ikke adgang til denne kommando'
         })
     end
+
     if locked == nil then
         locked = 0
     end
+
     local alert = lib.alertDialog({
         header = 'Toggle Zone',
         content = 'Er du sikker på du vil ' .. (locked == 1 and 'låse' or 'åbne') .. ' denne zone?\n\nZone: ' ..
@@ -382,6 +403,7 @@ function AdminToggleZone(zone, locked)
         centered = true,
         cancel = true
     })
+
     if alert == 'confirm' then
         local response = lib.callback.await('visualz_zones:AdminToggleZone', false, zone.zone, locked)
         lib.notify({
@@ -389,6 +411,7 @@ function AdminToggleZone(zone, locked)
             description = response.description
         })
     end
+
     AdminZone()
 end
 

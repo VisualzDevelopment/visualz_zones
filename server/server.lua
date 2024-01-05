@@ -26,6 +26,18 @@ CreateThread(function()
     end
 end)
 
+CreateThread(function()
+    while true do
+        Wait(300000)
+
+        for _, zone in pairs(Zones) do
+            -- // TODO: Check when there was last sold in the zone
+
+            -- // TODO: If there was NOT sold in the zone for "Config Seconds or Minutes" then remove "Config Points" from the zone and update the database
+        end
+    end
+end)
+
 function IsAllowedGang(gang)
     for _, v in pairs(Config.AllowedGangs) do
         if v == gang then
@@ -162,7 +174,6 @@ function AddAlliance(xPlayer, zone, alliance)
     return true
 end
 
--- Function to add points to a zone based on certain conditions
 function AddPoints(xPlayer, zone, drugPrice, drugType)
     local clientZone = lib.callback.await("visualz_zones:getZone", xPlayer.source, xPlayer.getCoords(true))
     if clientZone ~= zone then
@@ -799,9 +810,6 @@ end)
 
 lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source, zone, id)
     local xPlayer = ESX.GetPlayerFromId(source)
-
-    local tPlayer = ESX.GetPlayerFromId(id)
-
     if not xPlayer then
         return {
             description = 'Der skete en fejl',
@@ -809,6 +817,7 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
         }
     end
 
+    local tPlayer = ESX.GetPlayerFromId(id)
     if not tPlayer then
         return {
             description = 'Spilleren er ikke online',
@@ -912,8 +921,7 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
         position = 'top',
     })
 
-    local requestResponse = lib.callback.await("visualz_zones:requestTransferFromOtherPlayer", tPlayer.source,
-        xPlayer.getName(), zone)
+    local requestResponse = lib.callback.await("visualz_zones:requestTransferFromOtherPlayer", tPlayer.source, xPlayer.getName(), zone)
     if not requestResponse then
         requests[tPlayer.source] = nil
         TriggerClientEvent("ox_lib:notify", tPlayer.source, {
@@ -932,12 +940,12 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
     end
 
     if requests[tPlayer.source] == nil then
-        return TriggerClientEvent("ox_lib:notify", xPlayer.source, {
+        return {
             id = 'create_alliance_request',
             description = 'Forespørgslen er udløbet',
             type = 'success',
             position = 'top',
-        })
+        }
     end
 
     TriggerClientEvent("ox_lib:notify", xPlayer.source, {
@@ -975,12 +983,12 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
     end
 
     if requests[tPlayer.source] == nil then
-        return TriggerClientEvent("ox_lib:notify", xPlayer.source, {
+        return {
             id = 'create_alliance_request',
             description = 'Forespørgslen er udløbet',
             type = 'success',
             position = 'top',
-        })
+        }
     end
 
     local transfer = TransferZone(xPlayer, zone, tPlayer.job.name)
@@ -1012,8 +1020,8 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
         "**Spilleren identifier:** " .. xPlayer.identifier .. "\n" ..
         "**Modtagerens identifier:** " .. tPlayer.identifier .. "\n"
 
-    SendLog(Logs["TransferZone"], 2829617, "Zone overført", discordMessage, "Visualz Development | Visualz.dk | " ..
-        os.date("%d/%m/%Y %H:%M:%S"))
+    SendLog(Logs["TransferZone"], 2829617, "Zone overført", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+
     requests[tPlayer.source] = nil
     TriggerClientEvent("ox_lib:notify", tPlayer.source, {
         id = 'create_alliance_request',
@@ -1021,28 +1029,27 @@ lib.callback.register("visualz_zones:requestTransferFromPlayer", function(source
         type = 'success',
         position = 'top',
     })
-    TriggerClientEvent("ox_lib:notify", xPlayer.source, {
+    return {
         id = 'create_alliance_request',
         description = 'Du har nu overført zonen til ' .. tPlayer.job.label,
         type = 'success',
         position = 'top',
-    })
+    }
 end)
 
 lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source, zone, id)
     local xPlayer = ESX.GetPlayerFromId(source)
+    if not xPlayer then
+        return {
+            description = 'Der skete en fejl',
+            type = 'error',
+        }
+    end
 
     local tPlayer = ESX.GetPlayerFromId(id)
     if not tPlayer then
         return {
             description = 'Spilleren er ikke online',
-            type = 'error',
-        }
-    end
-
-    if not xPlayer then
-        return {
-            description = 'Der skete en fejl',
             type = 'error',
         }
     end
@@ -1152,16 +1159,15 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
         position = 'top',
     })
 
-    local requestResponse = lib.callback.await("visualz_zones:requestAllianceFromOtherPlayer", tPlayer.source,
-        xPlayer.getName(), xPlayer.job.label, zone.zone)
+    local requestResponse = lib.callback.await("visualz_zones:requestAllianceFromOtherPlayer", tPlayer.source, xPlayer.getName(), xPlayer.job.label, zone.zone)
     if not requestResponse then
+        requests[tPlayer.source] = nil
         TriggerClientEvent("ox_lib:notify", tPlayer.source, {
             id = 'create_alliance_request',
             description = 'Du har afvist forespørgslen om at oprette en alliance',
             type = 'error',
             position = 'top',
         })
-        requests[tPlayer.source] = nil
         return {
             id = 'create_alliance_request',
             description = 'Personen har afvist forespørgslen om at oprette en alliance',
@@ -1199,13 +1205,13 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
 
     local response = lib.callback.await("visualz_zones:allianceResponse", xPlayer.source, tPlayer.getName(), tPlayer.job.label, zone.zone)
     if not response then
+        requests[tPlayer.source] = nil
         TriggerClientEvent("ox_lib:notify", tPlayer.source, {
             id = 'create_alliance_request',
             description = 'Det er blevet afvist at alliere sig med ' .. xPlayer.job.label,
             type = 'error',
             position = 'top',
         })
-        requests[tPlayer.source] = nil
         return {
             id = 'create_alliance_request',
             description = 'Du har afvist at alliere dig med ' .. tPlayer.job.label,
@@ -1225,13 +1231,13 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
 
     local alliance = AddAlliance(xPlayer, zone.zone, tPlayer.job.name)
     if not alliance then
+        requests[tPlayer.source] = nil
         TriggerClientEvent("ox_lib:notify", tPlayer.source, {
             id = 'create_alliance_request',
             description = 'Der skete en fejl',
             type = 'error',
             position = 'top',
         })
-        requests[tPlayer.source] = nil
         return {
             id = 'create_alliance_request',
             description = 'Der skete en fejl',
@@ -1247,6 +1253,7 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
         type = 'success',
         position = 'top',
     })
+
     local discordMessage =
         "**Spillerens navn:** " .. xPlayer.getName() .. "\n" ..
         "**Modparten navn:** " .. tPlayer.getName() .. "\n\n" ..
@@ -1259,8 +1266,8 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
         "**Spilleren identifier:** " .. xPlayer.identifier .. "\n" ..
         "**Modpartens identifier:** " .. tPlayer.identifier .. "\n"
 
-    SendLog(Logs["CreateAlliance"], 2829617, "Alliance oprettet", discordMessage,
-        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+    SendLog(Logs["CreateAlliance"], 2829617, "Alliance oprettet", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+
     TriggerClientEvent("ox_lib:notify", tPlayer.source, {
         id = 'create_alliance_request',
         description = 'Du er nu allieret med ' .. xPlayer.job.label,
@@ -1318,8 +1325,7 @@ lib.callback.register('visualz_zones:RemoveAlliance', function(source, zone, all
 
         "**Spillerens identifier:** " .. xPlayer.identifier .. "\n"
 
-    SendLog(Logs["RemoveAlliance"], 2829617, "Alliance slettet", discordMessage,
-        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+    SendLog(Logs["RemoveAlliance"], 2829617, "Alliance slettet", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
 
     return { type = "success", description = "Alliancen er nu slettet" }
 end)

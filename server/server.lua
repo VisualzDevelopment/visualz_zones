@@ -28,7 +28,7 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(5000)
+        Wait(600000)
 
         for _, zone in pairs(Zones) do
             local zoneLastTimeSold = ESX.Math.Round(zone.last_time_sold / 1000, 0)
@@ -36,6 +36,18 @@ CreateThread(function()
 
             if zoneLastTimeSold + reducePointsTimerInSec <= os.time() then
                 if zone.points > 0 then
+                    local owner = zone.owner or "Ingen ejer"
+                    local discordMessage =
+                        "**Zone:** " .. zone.zone .. " - " .. Config.Zones[zone.zone] .. "\n" ..
+                        "**Points:** " .. zone.points .. "\n" ..
+                        "**Ejer:** " .. owner .. "\n\n" ..
+
+                        "**Sidst solgt i zonen:** " .. os.date("%d/%m/%Y %H:%M:%S", zoneLastTimeSold) .. "\n" ..
+                        "**Fjernet points:** " .. Config.PointsRemoveAmount .. "\n" ..
+                        "**Nye points:** " .. zone.points - Config.PointsRemoveAmount .. "\n"
+
+                    SendLog(Logs["ReducePoints"], 2829617, "Points fjernet", discordMessage,
+                        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
                     zone.points = zone.points - Config.PointsRemoveAmount
                     MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
                         zone.points, zone.zone
@@ -386,6 +398,15 @@ lib.callback.register('visualz_zones:GetAdminZones', function(source)
         }
     end
 
+    local discordMessage =
+        "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+        "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+        "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+    SendLog(Logs["OpenAdminZones"], 2829617, "Admin åbnede liste over zoner", discordMessage,
+        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+
     return Zones
 end)
 
@@ -449,6 +470,20 @@ lib.callback.register('visualz_zones:AdminAddAlliance', function(source, zone, g
         ['@zone'] = zone
     })
 
+    local discordMessage =
+        "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+        "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+        "**Zone ejer:** " .. (Zones[zone].owner or "Ingen ejer") .. "\n" ..
+        "**Alliance:** " .. gang .. "\n" ..
+        "**Alliancer efter tilføjelse:** " .. json.encode(alliances) .. "\n" ..
+        "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+        "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+    SendLog(Logs["AdminCreateAlliance"], 2829617, "Admin oprettet en alliance", discordMessage, "Visualz Development | Visualz.dk | " ..
+        os.date("%d/%m/%Y %H:%M:%S"))
+
     return {
         id = 'admin_zoes',
         description = 'Du har nu tilføjet ' .. gang .. ' til alliancen',
@@ -507,6 +542,20 @@ lib.callback.register("visualz_zones:AdminRemoveAlliance", function(source, zone
                     ['@zone'] = zone
                 })
 
+                local discordMessage =
+                    "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+                    "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+                    "**Zone ejer:** " .. (Zones[zone].owner or "Ingen ejer") .. "\n" ..
+                    "**Alliance:** " .. gang .. "\n" ..
+                    "**Alliancer efter fjernelse:** " .. json.encode(alliances) .. "\n" ..
+                    "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+                    "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+                SendLog(Logs["AdminRemoveAlliance"], 2829617, "Admin fjernede en alliance", discordMessage, "Visualz Development | Visualz.dk | " ..
+                    os.date("%d/%m/%Y %H:%M:%S"))
+
                 return {
                     id = 'admin_zoes',
                     description = 'Du har nu fjernet ' .. gang .. ' fra alliancen',
@@ -562,9 +611,22 @@ lib.callback.register('visualz_zones:AdminTransferZone', function(source, zone, 
             position = 'top',
         }
     end
+    local existingOwner = Zones[zone].owner or "Ingen ejer"
 
     local didTransfer = AdminTransferZone(xPlayer, zone, gang)
     if didTransfer then
+        local discordMessage =
+            "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+            "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+            "**Zone ejer:** " .. existingOwner .. "\n" ..
+            "**Ny ejer:** " .. gang .. "\n" ..
+            "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+            "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+        SendLog(Logs["AdminTransferZone"], 2829617, "Admin overførte en zone", discordMessage, "Visualz Development | Visualz.dk | " ..
+            os.date("%d/%m/%Y %H:%M:%S"))
         return {
             id = 'admin_zoes',
             description = 'Du har nu overført zonen til ' .. gang,
@@ -615,6 +677,19 @@ lib.callback.register('visualz_zones:AdminResetZone', function(source, zone)
     })
 
     if didReset then
+        local discordMessage =
+            "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+            "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+            "**Zone ejer:** " .. (Zones[zone].owner or "Ingen ejer") .. "\n" ..
+            "**Alliancer:** " .. json.encode(Zones[zone].alliance) .. "\n" ..
+            "**Points:** " .. Zones[zone].points .. "\n" ..
+            "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+            "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+        SendLog(Logs["AdminResetZone"], 2829617, "Admin nulstillede en zone", discordMessage, "Visualz Development | Visualz.dk | " ..
+            os.date("%d/%m/%Y %H:%M:%S"))
         Zones[zone].owner = nil
         Zones[zone].alliance = "[]"
         Zones[zone].points = 0
@@ -697,6 +772,19 @@ lib.callback.register("visualz_zones:AdminSetPoint", function(source, zone, poin
     })
 
     if didReset then
+        local discordMessage =
+            "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+            "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+            "**Zone ejer:** " .. (Zones[zone].owner or "Ingen ejer") .. "\n" ..
+            "**Nuværende points:** " .. Zones[zone].points .. "\n" ..
+            "**Point efter:** " .. point .. "\n" ..
+            "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+            "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+        SendLog(Logs["AdminSetPoint"], 2829617, "Admin satte points", discordMessage, "Visualz Development | Visualz.dk | " ..
+            os.date("%d/%m/%Y %H:%M:%S"))
         Zones[zone].points = point
         return {
             id = 'admin_zoes',
@@ -755,6 +843,17 @@ lib.callback.register('visualz_zones:AdminToggleZone', function(source, zone, lo
     })
 
     if didLock then
+        local discordMessage =
+            "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+            "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+
+            "**Zone ejer:** " .. (Zones[zone].owner or "Ingen ejer") .. "\n" ..
+            "**Zone:** " .. zone .. " - " .. Config.Zones[zone] .. "\n\n" ..
+
+            "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+
+        SendLog(Logs["AdminToggleZone"], 2829617, "Admin " .. (locked == 0 and 'åbnet' or 'låste') .. " en zone", discordMessage, "Visualz Development | Visualz.dk | " ..
+            os.date("%d/%m/%Y %H:%M:%S"))
         Zones[zone].locked = locked
         return {
             id = 'admin_zoes',

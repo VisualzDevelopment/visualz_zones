@@ -46,12 +46,19 @@ CreateThread(function()
                         "**Fjernet points:** " .. Config.PointsRemoveAmount .. "\n" ..
                         "**Nye points:** " .. zone.points - Config.PointsRemoveAmount .. "\n"
 
-                    SendLog(Logs["ReducePoints"], 2829617, "Points fjernet", discordMessage,
-                        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+                    SendLog(Logs["ReducePoints"], 2829617, "Points fjernet", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
                     zone.points = zone.points - Config.PointsRemoveAmount
-                    MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
-                        zone.points, zone.zone
-                    })
+                    if zone.points > 0 then
+                        MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
+                            zone.points, zone.zone
+                        })
+                    else
+                        MySQL.update.await('UPDATE visualz_zones SET points = ?, owner = ?, alliance = ? WHERE zone = ?', {
+                            zone.points, nil, "[]", zone.zone
+                        })
+                    end
+                else
+
                 end
             end
         end
@@ -295,8 +302,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
 
                             "**Spillerens identifier:** " .. xPlayer.identifier .. "\n"
 
-                        SendLog(Logs["TakeZone"], 2829617, "Zone overtaget", discordMessage,
-                            "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+                        SendLog(Logs["TakeZone"], 2829617, "Zone overtaget", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
 
                         TriggerClientEvent("ox_lib:notify", xPlayer.source, {
                             type = 'success',
@@ -404,8 +410,7 @@ lib.callback.register('visualz_zones:GetAdminZones', function(source)
 
         "**Admins identifier:** " .. xPlayer.identifier .. "\n"
 
-    SendLog(Logs["OpenAdminZones"], 2829617, "Admin åbnede liste over zoner", discordMessage,
-        "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+    SendLog(Logs["OpenAdminZones"], 2829617, "Admin åbnede liste over zoner", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
 
     return Zones
 end)

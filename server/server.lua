@@ -93,7 +93,8 @@ MySQL.ready(function()
                 '`owner` varchar(46) DEFAULT NULL,' ..
                 '`alliance` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT \'[]\',' ..
                 '`points` int(11) NOT NULL,' ..
-                '`locked` int(11) NOT NULL DEFAULT 0' ..
+                '`locked` int(11) NOT NULL DEFAULT 0,' ..
+                '`last_time_sold` timestamp NOT NULL DEFAULT current_timestamp()' ..
                 ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci',
                 {}
             );

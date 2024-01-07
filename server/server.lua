@@ -28,7 +28,7 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(600000)
+        Wait(ESX.Math.Round(Config.ReducePointsCheck, 0) * 60 * 1000)
 
         for _, zone in pairs(Zones) do
             local zoneLastTimeSold = ESX.Math.Round(zone.last_time_sold / 1000, 0)
@@ -325,18 +325,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                     local chance = math.random(1, 100)
 
                     if chance <= Config.AlertGang then
-                        local xPlayers = ESX.GetExtendedPlayers('job', v.owner)
-                        for _, tPlayer in pairs(xPlayers) do
-                            if tPlayer then
-                                local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(tPlayer.source)
-                                if phoneNumber then
-                                    local message = 'Der er nogle der sælger stoffer i ' .. zoneName .. ' - ' .. Config.Zones[zone] .. '!'
-                                    local coords = xPlayer.getCoords(true)
-                                    exports["lb-phone"]:SendMessage(Config.PhoneContactName, phoneNumber, message)
-                                    exports["lb-phone"]:SendCoords(Config.PhoneContactName, phoneNumber, vector2(coords.x, coords.y))
-                                end
-                            end
-                        end
+                        AlertGang(xPlayer, v, zoneName)
                     end
                 end
             end

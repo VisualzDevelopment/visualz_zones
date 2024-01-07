@@ -11,15 +11,19 @@ Config.PointsRemoveAmount = 1
 Config.PopularDrugMultiplier = 1.05
 Config.OwnedZoneMultiplier = 1.1
 
+Config.AdminCommand = "adminzones"
+Config.ZoneCommand = "zone"
+
 -- Math Example: Config.ReducePointsAmount = 1
 -- Note: This is per 10 minutes and will be rounded to the nearest whole number
 
 -- Per minute: Config.Config.ReducePointsAmount / Config.ReducePointsCheck = 0.1
--- Per hour: 60 / 10 * Config.ReducePointsAmount = 6
--- Per day: 60 * 24 / 10 * Config.ReducePointsAmount = 144
--- Per week: 60 * 24 * 7 / 10 * Config.ReducePointsAmount = 1008
--- Per month: 60 * 24 * 30 / 10 * Config.ReducePointsAmount = 4320
+-- Per hour: 60 / Config.ReducePointsCheck * Config.ReducePointsAmount = 6
+-- Per day: 60 * 24 / Config.ReducePointsCheck * Config.ReducePointsAmount = 144
+-- Per week: 60 * 24 * 7 / Config.ReducePointsCheck * Config.ReducePointsAmount = 1008
+-- Per month: 60 * 24 * 30 / Config.ReducePointsCheck * Config.ReducePointsAmount = 4320
 Config.ReducePointsEnabled = true
+Config.ReducePointsCheck = 10 -- How often in minutes to check for reducing points rounds to nearest whole number
 Config.ReducePointsTimer = 1  -- How long in hours before the points start to reduce
 Config.ReducePointsAmount = 1 -- Will run every 10 minutes and remove Config.ReducePointsAmount points
 

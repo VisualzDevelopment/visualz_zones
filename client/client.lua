@@ -415,7 +415,7 @@ function AdminToggleZone(zone, locked)
     AdminZone()
 end
 
-RegisterCommand("adminzones", function(source, args, raw)
+RegisterCommand(Config.AdminCommand, function(source, args, raw)
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -426,7 +426,7 @@ RegisterCommand("adminzones", function(source, args, raw)
     AdminZone()
 end)
 
-RegisterCommand("zone", function(source, args, raw)
+RegisterCommand(Config.ZoneCommand, function(source, args, raw)
     if not IsAllowedGang() then
         return lib.notify({
             type = 'error',

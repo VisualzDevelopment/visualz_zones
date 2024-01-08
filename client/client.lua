@@ -335,7 +335,7 @@ function AdminTransferZone()
     })
 
     if not input then
-        return AdminZone()
+        return OpenZoneAdmin()
     end
 
     if input[2] == "" then
@@ -465,7 +465,7 @@ function AdminToggleZone()
 
     local alert = lib.alertDialog({
         header = 'Toggle Zone',
-        content = 'Er du sikker på du vil ' .. (currentAdminZone.locked == 1 and 'låse' or 'åbne') .. ' denne zone?\n\nZone: ' .. Config.Zones[currentAdminZone.zone] .. '\n\nZone Forkortelse: ' .. currentAdminZone.zone,
+        content = 'Er du sikker på du vil ' .. (currentAdminZone.locked == 0 and 'låse' or 'åbne') .. ' denne zone?\n\nZone: ' .. Config.Zones[currentAdminZone.zone] .. '\n\nZone Forkortelse: ' .. currentAdminZone.zone,
         centered = true,
         cancel = true
     })

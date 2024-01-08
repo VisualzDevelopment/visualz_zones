@@ -233,7 +233,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                 end
             end
             if v.locked == 1 then
-                TriggerClientEvent('ox_lib:notify', source, {
+                TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                     type = 'error',
                     description = 'Zonen er låst',
                 })
@@ -243,36 +243,35 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                 xPlayer.addAccountMoney('black_money', math.floor(OwnedZonePrice))
                 hasGottenControlReward = true
                 if CheckControlReward(drugType, zone, xPlayer, popularDrugPrice) then
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'success',
                         description = math.floor(popularDrugPrice + OwnedZonePrice) ..
                             ' - DKK populæret stof & kontrollering i ' .. zoneName
                     })
                 else
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'success',
                         description = math.floor(OwnedZonePrice) .. ' DKK - Kontrollering af ' .. zoneName
                     })
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'inform',
                         description = 'Du har opnået maksimum points i ' .. zoneName
                     })
                 end
             elseif (v.owner == gang and v.points >= 0) or (alliance and v.points >= 0) then
                 xPlayer.addAccountMoney('black_money', math.floor(OwnedZonePrice))
-                TriggerClientEvent('ox_lib:notify', source, {
+                TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                     type = 'inform',
                     description = '+' .. Config.PointsAddAmount .. ' Points i ' .. zoneName
                 })
                 hasGottenControlReward = true
                 if CheckControlReward(drugType, zone, xPlayer, popularDrugPrice) then
-                    print("hej")
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'success',
                         description = math.floor(popularDrugPrice + OwnedZonePrice) .. ' - DKK populæret stof & kontrollering i ' .. zoneName
                     })
                 else
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'success',
                         description = math.floor(OwnedZonePrice) .. ' DKK - Bonus for at eje ' .. zoneName
                     })
@@ -314,7 +313,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                     end
                 else
                     v.points = v.points - Config.PointsRemoveAmount
-                    TriggerClientEvent('ox_lib:notify', source, {
+                    TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                         type = 'inform',
                         description = '-' .. Config.PointsRemoveAmount .. ' Points i ' .. zoneName
                     })
@@ -336,7 +335,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
 
     if not hasGottenControlReward then
         if CheckControlReward(drugType, zone, xPlayer, popularDrugPrice) then
-            TriggerClientEvent('ox_lib:notify', source, {
+            TriggerClientEvent('ox_lib:notify', xPlayer.source, {
                 type = 'success',
                 description = math.floor(popularDrugPrice) .. ' - DKK populæret stof i ' .. zoneName
             })

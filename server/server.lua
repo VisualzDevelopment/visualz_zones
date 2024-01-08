@@ -884,7 +884,7 @@ function AdminTransferZone(xPlayer, zone, newOwner)
     })
 
     Zones[zone].owner = newOwner
-    Zones[zone].alliance = "[]"
+    Zones[zone].alliance = {}
     return true
 end
 

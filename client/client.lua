@@ -105,8 +105,8 @@ function OpenZoneAdmin()
     end
 
     local owner = currentAdminZone.owner == nil and "Ingen" or currentAdminZone.owner
-    local lockedIcon = currentAdminZone.locked == 1 and 'fa-solid fa-toggle-on' or 'fa-solid fa-toggle-off'
-    local lockedDescription = currentAdminZone.locked == 1 and 'Klik for at åbne zonen' or 'Klik for at låse zonen'
+    local lockedIcon = currentAdminZone.locked == 1 and 'fa-solid fa-lock' or 'fa-solid fa-lock-open'
+    local lockedDescription = currentAdminZone.locked == 1 and 'Klik for at åbne zonen - Status: Låst' or 'Klik for at låse zonen - Status: Åben'
     local lockedTitle = currentAdminZone.locked == 1 and 'Åben zone' or 'Lås zone'
 
     local options = {
@@ -170,6 +170,9 @@ function OpenZoneAdmin()
         id = 'admin_specific_zone_menu',
         title = 'Zone oversigt',
         menu = 'admin_zone_menu',
+        onBack = function()
+            AdminZone()
+        end,
         options = options
     })
 
@@ -412,7 +415,7 @@ function AdminSetPoint()
     local input = lib.inputDialog('Sæt point', {
         { type = 'input',    label = 'Zone',                                description = "Zonen der skal sættes point på", icon = 'map',       default = Config.Zones[currentAdminZone.zone], disabled = true },
         { type = 'input',    label = 'Nuværende point',                     description = 'Nuværende point',                icon = 'signature', default = currentAdminZone.points,             disabled = true },
-        { type = 'number',   label = 'Point',                               description = 'Antal point',                    icon = 'signature', disabled = false },
+        { type = 'number',   label = 'Point',                               description = 'Antal point',                    icon = 'signature', disabled = false,                              min = 0,        max = Config.MaximumPoints },
         { type = 'checkbox', label = 'Bekræft at du ønsker at sætte point', required = true },
     })
 

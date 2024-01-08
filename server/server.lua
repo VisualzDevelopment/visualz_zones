@@ -101,19 +101,16 @@ MySQL.ready(function()
 
             if createTableResponse then
                 for k, v in pairs(Config.Zones) do
-                    MySQL.insert(
-                        'INSERT INTO visualz_zones (zone, owner, alliance, points) VALUES (@zone, @owner, @alliance, @points)',
-                        {
-                            ['@zone'] = k,
-                            ['@owner'] = nil,
-                            ['@alliance'] = json.encode({}),
-                            ['@points'] = 0
-                        }
-                    )
+                    MySQL.insert('INSERT INTO visualz_zones (zone, owner, alliance, points) VALUES (@zone, @owner, @alliance, @points)', {
+                        ['@zone'] = k,
+                        ['@owner'] = nil,
+                        ['@alliance'] = json.encode({}),
+                        ['@points'] = 0
+                    })
                     Zones[k] = {
                         zone = k,
                         owner = nil,
-                        alliance = json.encode({}),
+                        alliance = {},
                         points = 0
                     }
                 end
@@ -123,6 +120,7 @@ MySQL.ready(function()
                 if response then
                     for i = 1, #response do
                         Zones[response[i].zone] = response[i]
+                        Zones[response[i].zone].alliance = json.decode(response[i].alliance)
                     end
                 end
             end)
@@ -149,7 +147,7 @@ function TransferZone(xPlayer, zone, newOwner)
         })
 
         Zones[zone].owner = newOwner
-        Zones[zone].alliance = "[]"
+        Zones[zone].alliance = {}
         return true
     end
 
@@ -194,7 +192,7 @@ function AddAlliance(xPlayer, zone, alliance)
     end
 
     table.insert(alliances, alliance)
-    Zones[zone].alliance = json.encode(alliances)
+    Zones[zone].alliance = alliances
 
     MySQL.Async.execute('UPDATE visualz_zones SET alliance = @alliance WHERE zone = @zone', {
         ['@alliance'] = json.encode(alliances),
@@ -225,7 +223,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                 break
             end
             if v.alliance ~= nil then
-                local alliances = json.decode(v.alliance)
+                local alliances = v.alliance
                 if alliances ~= nil then
                     for _, v in pairs(alliances) do
                         if v == gang then
@@ -271,8 +269,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                     print("hej")
                     TriggerClientEvent('ox_lib:notify', source, {
                         type = 'success',
-                        description = math.floor(popularDrugPrice + OwnedZonePrice) ..
-                            ' - DKK populæret stof & kontrollering i ' .. zoneName
+                        description = math.floor(popularDrugPrice + OwnedZonePrice) .. ' - DKK populæret stof & kontrollering i ' .. zoneName
                     })
                 else
                     TriggerClientEvent('ox_lib:notify', source, {
@@ -394,13 +391,15 @@ lib.callback.register('visualz_zones:GetAdminZones', function(source)
         }
     end
 
-    local discordMessage =
-        "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
-        "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
+    CreateThread(function()
+        local discordMessage =
+            "**Admins navn:** " .. xPlayer.getName() .. "\n" ..
+            "**Admins bande:** " .. xPlayer.job.label .. " - " .. xPlayer.job.name .. " \n\n" ..
 
-        "**Admins identifier:** " .. xPlayer.identifier .. "\n"
+            "**Admins identifier:** " .. xPlayer.identifier .. "\n"
 
-    SendLog(Logs["OpenAdminZones"], 2829617, "Admin åbnede liste over zoner", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+        SendLog(Logs["OpenAdminZones"], 2829617, "Admin åbnede liste over zoner", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+    end)
 
     return Zones
 end)
@@ -443,7 +442,7 @@ lib.callback.register('visualz_zones:AdminAddAlliance', function(source, zone, g
         }
     end
 
-    local alliances = json.decode(Zones[zone].alliance)
+    local alliances = Zones[zone].alliance
     if alliances then
         for k, v in pairs(alliances) do
             if v == gang then
@@ -458,7 +457,7 @@ lib.callback.register('visualz_zones:AdminAddAlliance', function(source, zone, g
     end
 
     table.insert(alliances, gang)
-    Zones[zone].alliance = json.encode(alliances)
+    Zones[zone].alliance = alliances
 
     MySQL.Async.execute('UPDATE visualz_zones SET alliance = @alliance WHERE zone = @zone', {
         ['@alliance'] = json.encode(alliances),
@@ -525,12 +524,12 @@ lib.callback.register("visualz_zones:AdminRemoveAlliance", function(source, zone
         }
     end
 
-    local alliances = json.decode(Zones[zone].alliance)
+    local alliances = Zones[zone].alliance
     if alliances then
         for k, v in pairs(alliances) do
             if v == gang then
                 table.remove(alliances, k)
-                Zones[zone].alliance = json.encode(alliances)
+                Zones[zone].alliance = alliances
 
                 MySQL.Async.execute('UPDATE visualz_zones SET alliance = @alliance WHERE zone = @zone', {
                     ['@alliance'] = json.encode(alliances),
@@ -1224,7 +1223,7 @@ lib.callback.register("visualz_zones:requestAllianceFromPlayer", function(source
     end
 
     if Zones[zone.zone].alliance then
-        local alliances = json.decode(Zones[zone.zone].alliance)
+        local alliances = Zones[zone.zone].alliance
         for k, v in pairs(alliances) do
             if v == tPlayer.job.name then
                 return {
@@ -1407,7 +1406,7 @@ lib.callback.register('visualz_zones:RemoveAlliance', function(source, zone, all
         end
     end
 
-    Zones[zone].alliance = json.encode(alliances)
+    Zones[zone].alliance = alliances
 
     MySQL.Async.execute('UPDATE visualz_zones SET alliance = @alliance WHERE zone = @zone', {
         ['@alliance'] = json.encode(alliances),

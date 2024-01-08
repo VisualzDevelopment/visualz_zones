@@ -1,3 +1,5 @@
+local currentAdminZone = nil
+
 function ZoneMenu()
     local ownedZones = lib.callback.await('visualz_zones:GetOwnedZones')
 
@@ -64,7 +66,8 @@ function AdminZone()
             progress = v.points / Config.MaximumPoints * 100,
             colorScheme = "blue",
             onSelect = function()
-                OpenZoneAdmin(v)
+                currentAdminZone = v
+                OpenZoneAdmin()
             end
         })
     end
@@ -88,7 +91,7 @@ function AdminZone()
     lib.showContext('admin_zone_menu')
 end
 
-function OpenZoneAdmin(zone)
+function OpenZoneAdmin()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -97,16 +100,21 @@ function OpenZoneAdmin(zone)
         })
     end
 
-    local owner = zone.owner == nil and "Ingen" or zone.owner
-    local lockedIcon = zone.locked == 1 and 'fa-solid fa-toggle-on' or 'fa-solid fa-toggle-off'
-    local lockedDescription = zone.locked == 1 and 'Klik for at åbne zonen' or 'Klik for at låse zonen'
-    local lockedTitle = zone.locked == 1 and 'Åben zone' or 'Lås zone'
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
+    local owner = currentAdminZone.owner == nil and "Ingen" or currentAdminZone.owner
+    local lockedIcon = currentAdminZone.locked == 1 and 'fa-solid fa-toggle-on' or 'fa-solid fa-toggle-off'
+    local lockedDescription = currentAdminZone.locked == 1 and 'Klik for at åbne zonen' or 'Klik for at låse zonen'
+    local lockedTitle = currentAdminZone.locked == 1 and 'Åben zone' or 'Lås zone'
+
     local options = {
         {
             icon = "map-location-dot",
-            title = Config.Zones[zone.zone] .. " - " .. zone.zone,
-            description = "Zonen har opnået " .. zone.points .. "/" .. Config.MaximumPoints .. " points\n Ejer af zonen: " .. owner,
-            progress = zone.points / Config.MaximumPoints * 100,
+            title = Config.Zones[currentAdminZone.zone] .. " - " .. currentAdminZone.zone,
+            description = "Zonen har opnået " .. currentAdminZone.points .. "/" .. Config.MaximumPoints .. " points\n Ejer af zonen: " .. owner,
+            progress = currentAdminZone.points / Config.MaximumPoints * 100,
             colorScheme = "blue",
             readOnly = true,
         },
@@ -115,7 +123,7 @@ function OpenZoneAdmin(zone)
             title = lockedTitle,
             description = lockedDescription,
             onSelect = function()
-                AdminToggleZone(zone, zone.locked)
+                AdminToggleZone()
             end
         },
         {
@@ -123,7 +131,7 @@ function OpenZoneAdmin(zone)
             title = "Se alliancer",
             description = "Klik for at se/håndtere alliancer",
             onSelect = function()
-                OpenAdminAlliances(zone)
+                OpenAdminAlliances()
             end
         },
         {
@@ -131,7 +139,7 @@ function OpenZoneAdmin(zone)
             title = "Overfør zone",
             description = "Klik for at overfører zonen til en anden bande",
             onSelect = function()
-                AdminTransferZone(zone)
+                AdminTransferZone()
             end
         },
         {
@@ -139,7 +147,7 @@ function OpenZoneAdmin(zone)
             title = "Angiv zone point",
             description = "Klik for at sætte zone point",
             onSelect = function()
-                AdminSetPoint(zone)
+                AdminSetPoint()
             end
         },
         {
@@ -147,7 +155,7 @@ function OpenZoneAdmin(zone)
             title = "Reset zone",
             description = "Klik for at reset zonen",
             onSelect = function()
-                AdminResetZone(zone)
+                AdminResetZone()
             end
         },
     }
@@ -168,7 +176,7 @@ function OpenZoneAdmin(zone)
     lib.showContext('admin_specific_zone_menu')
 end
 
-function OpenAdminAlliances(zone)
+function OpenAdminAlliances()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -177,9 +185,13 @@ function OpenAdminAlliances(zone)
         })
     end
 
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
     local options = {}
 
-    local alliances = lib.callback.await('visualz_zones:GetAlliances', false, zone.zone)
+    local alliances = lib.callback.await('visualz_zones:GetAlliances', false, currentAdminZone.zone)
 
     if alliances ~= nil then
         for k, v in pairs(alliances) do
@@ -187,7 +199,7 @@ function OpenAdminAlliances(zone)
                 title = v,
                 description = "Klik for at fjerne alliance",
                 onSelect = function()
-                    AdminRemoveAlliance(zone, k, v)
+                    AdminRemoveAlliance(k, v)
                 end
             })
         end
@@ -202,7 +214,7 @@ function OpenAdminAlliances(zone)
             table.insert(options, {
                 title = "Tilføj alliance",
                 onSelect = function()
-                    AdminAddAlliance(zone)
+                    AdminAddAlliance()
                 end
             })
         end
@@ -218,7 +230,7 @@ function OpenAdminAlliances(zone)
     lib.showContext('alliance_menu')
 end
 
-function AdminAddAlliance(zone)
+function AdminAddAlliance()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -227,14 +239,18 @@ function AdminAddAlliance(zone)
         })
     end
 
+    if not currentAdminZone then
+        return OpenZoneAdmin()
+    end
+
     local input = lib.inputDialog('Opret alliance', {
-        { type = 'input',    label = 'Zone',                                      description = "Aliancen er i",    icon = 'map',       default = Config.Zones[zone.zone], disabled = true },
+        { type = 'input',    label = 'Zone',                                      description = "Aliancen er i",    icon = 'map',       default = Config.Zones[currentAdminZone.zone], disabled = true },
         { type = 'input',    label = 'Bande',                                     description = 'Navnet på banden', icon = 'signature', disabled = false },
         { type = 'checkbox', label = 'Bekræft at du ønsker at oprette alliancen', required = true },
     })
 
     if not input then
-        return OpenAdminAlliances(zone)
+        return OpenAdminAlliances()
     end
 
     if input[2] == "" then
@@ -245,16 +261,22 @@ function AdminAddAlliance(zone)
     end
 
     if input[3] then
-        local response = lib.callback.await('visualz_zones:AdminAddAlliance', false, zone.zone, input[2])
+        local response = lib.callback.await('visualz_zones:AdminAddAlliance', false, currentAdminZone.zone, input[2])
+
+        if response.type == 'success' then
+            currentAdminZone.alliance[input[2]] = input[2]
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
-        OpenAdminAlliances(zone)
     end
+
+    OpenAdminAlliances()
 end
 
-function AdminRemoveAlliance(zone, gang, label)
+function AdminRemoveAlliance(gang, label)
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -263,26 +285,34 @@ function AdminRemoveAlliance(zone, gang, label)
         })
     end
 
+    if not currentAdminZone then
+        return OpenZoneAdmin()
+    end
+
     local alert = lib.alertDialog({
         header = 'Fjern Alliance',
-        content = 'Er du sikker på du vil fjerne denne alliance?\n\nBande: ' ..
-            label .. '\n\nZone: ' .. Config.Zones[zone.zone] .. '\n\nZone Forkortelse: ' .. zone.zone,
+        content = 'Er du sikker på du vil fjerne denne alliance?\n\nBande: ' .. label .. '\n\nZone: ' .. Config.Zones[currentAdminZone.zone] .. '\n\nZone Forkortelse: ' .. currentAdminZone.zone,
         centered = true,
         cancel = true
     })
 
     if alert == 'confirm' then
-        local response = lib.callback.await('visualz_zones:AdminRemoveAlliance', false, zone.zone, gang)
+        local response = lib.callback.await('visualz_zones:AdminRemoveAlliance', false, currentAdminZone.zone, gang)
+
+        if response.type == 'success' then
+            currentAdminZone.alliance[gang] = nil
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
     end
 
-    OpenAdminAlliances(zone)
+    OpenAdminAlliances()
 end
 
-function AdminTransferZone(zone)
+function AdminTransferZone()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -291,8 +321,12 @@ function AdminTransferZone(zone)
         })
     end
 
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
     local input = lib.inputDialog('Overfør zone', {
-        { type = 'input',    label = 'Zone',                                   description = "Zonen der skal overføres", icon = 'map',       default = Config.Zones[zone.zone], disabled = true },
+        { type = 'input',    label = 'Zone',                                   description = "Zonen der skal overføres", icon = 'map',       default = Config.Zones[currentAdminZone.zone], disabled = true },
         { type = 'input',    label = 'Bande',                                  description = 'Navnet på banden',         icon = 'signature', disabled = false },
         { type = 'checkbox', label = 'Bekræft at du ønsker at overføre zonen', required = true },
     })
@@ -309,16 +343,22 @@ function AdminTransferZone(zone)
     end
 
     if input[3] then
-        local response = lib.callback.await('visualz_zones:AdminTransferZone', false, zone.zone, input[2])
+        local response = lib.callback.await('visualz_zones:AdminTransferZone', false, currentAdminZone.zone, input[2])
+
+        if response.type == 'success' then
+            currentAdminZone.owner = input[2]
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
-        AdminZone()
     end
+
+    OpenZoneAdmin()
 end
 
-function AdminResetZone(zone)
+function AdminResetZone()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -327,26 +367,36 @@ function AdminResetZone(zone)
         })
     end
 
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
     local alert = lib.alertDialog({
         header = 'Reset Zone',
-        content = 'Er du sikker på du vil resete denne zone?\n\nZone: ' ..
-            Config.Zones[zone.zone] .. '\n\nZone Forkortelse: ' .. zone.zone,
+        content = 'Er du sikker på du vil resete denne zone?\n\nZone: ' .. Config.Zones[currentAdminZone.zone] .. '\n\nZone Forkortelse: ' .. currentAdminZone.zone,
         centered = true,
         cancel = true
     })
 
     if alert == 'confirm' then
-        local response = lib.callback.await('visualz_zones:AdminResetZone', false, zone.zone)
+        local response = lib.callback.await('visualz_zones:AdminResetZone', false, currentAdminZone.zone)
+
+        if response.type == 'success' then
+            currentAdminZone.points = 0
+            currentAdminZone.owner = nil
+            currentAdminZone.alliance = {}
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
     end
 
-    AdminZone()
+    OpenZoneAdmin()
 end
 
-function AdminSetPoint(zone)
+function AdminSetPoint()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -355,10 +405,14 @@ function AdminSetPoint(zone)
         })
     end
 
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
     local input = lib.inputDialog('Sæt point', {
-        { type = 'input',    label = 'Zone',                                description = "Zonen der skal sættes point på", icon = 'map',       default = Config.Zones[zone.zone], disabled = true },
-        { type = 'input',    label = 'Nuværende point',                     description = 'Nuværende point',                icon = 'signature', default = zone.points,             disabled = true },
-        { type = 'input',    label = 'Point',                               description = 'Antal point',                    icon = 'signature', disabled = false },
+        { type = 'input',    label = 'Zone',                                description = "Zonen der skal sættes point på", icon = 'map',       default = Config.Zones[currentAdminZone.zone], disabled = true },
+        { type = 'input',    label = 'Nuværende point',                     description = 'Nuværende point',                icon = 'signature', default = currentAdminZone.points,             disabled = true },
+        { type = 'number',   label = 'Point',                               description = 'Antal point',                    icon = 'signature', disabled = false },
         { type = 'checkbox', label = 'Bekræft at du ønsker at sætte point', required = true },
     })
 
@@ -374,16 +428,22 @@ function AdminSetPoint(zone)
     end
 
     if input[4] then
-        local response = lib.callback.await('visualz_zones:AdminSetPoint', false, zone.zone, input[3])
+        local response = lib.callback.await('visualz_zones:AdminSetPoint', false, currentAdminZone.zone, input[3])
+
+        if response.type == 'success' then
+            currentAdminZone.points = tonumber(input[3])
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
-        AdminZone()
     end
+
+    OpenZoneAdmin()
 end
 
-function AdminToggleZone(zone, locked)
+function AdminToggleZone()
     local isAdmin = lib.callback.await('visualz_zones:isAdmin')
     if not isAdmin then
         return lib.notify({
@@ -392,27 +452,35 @@ function AdminToggleZone(zone, locked)
         })
     end
 
-    if locked == nil then
-        locked = 0
+    if not currentAdminZone then
+        return AdminZone()
+    end
+
+    if currentAdminZone.locked == nil then
+        currentAdminZone.locked = 0
     end
 
     local alert = lib.alertDialog({
         header = 'Toggle Zone',
-        content = 'Er du sikker på du vil ' .. (locked == 1 and 'låse' or 'åbne') .. ' denne zone?\n\nZone: ' ..
-            Config.Zones[zone.zone] .. '\n\nZone Forkortelse: ' .. zone.zone,
+        content = 'Er du sikker på du vil ' .. (currentAdminZone.locked == 1 and 'låse' or 'åbne') .. ' denne zone?\n\nZone: ' .. Config.Zones[currentAdminZone.zone] .. '\n\nZone Forkortelse: ' .. currentAdminZone.zone,
         centered = true,
         cancel = true
     })
 
     if alert == 'confirm' then
-        local response = lib.callback.await('visualz_zones:AdminToggleZone', false, zone.zone, locked)
+        local response = lib.callback.await('visualz_zones:AdminToggleZone', false, currentAdminZone.zone, currentAdminZone.locked)
+
+        if response.type == 'success' then
+            currentAdminZone.locked = currentAdminZone.locked == 1 and 0 or 1
+        end
+
         lib.notify({
             type = response.type,
             description = response.description
         })
     end
 
-    AdminZone()
+    OpenZoneAdmin()
 end
 
 RegisterCommand(Config.AdminCommand, function(source, args, raw)
@@ -669,9 +737,7 @@ end
 lib.callback.register("visualz_zones:requestTransferFromOtherPlayer", function(name, zone)
     local dialog = lib.alertDialog({
         header = "Overførsel af zone - " .. zone .. " - " .. Config.Zones[zone],
-        content = 'Du har modtaget en overførsels anmodning fra ' ..
-            name ..
-            ' i zonen: ' .. zone .. ' - ' .. Config.Zones[zone] .. '\n\nEr du sikker på du vil overføre denne zone?',
+        content = 'Du har modtaget en overførsels anmodning fra ' .. name .. ' i zonen: ' .. zone .. ' - ' .. Config.Zones[zone] .. '\n\nEr du sikker på du vil overføre denne zone?',
         centered = true,
         cancel = true,
         labels = {

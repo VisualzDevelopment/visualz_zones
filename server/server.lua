@@ -684,7 +684,7 @@ lib.callback.register('visualz_zones:AdminResetZone', function(source, zone)
         SendLog(Logs["AdminResetZone"], 2829617, "Admin nulstillede en zone", discordMessage, "Visualz Development | Visualz.dk | " ..
             os.date("%d/%m/%Y %H:%M:%S"))
         Zones[zone].owner = nil
-        Zones[zone].alliance = "[]"
+        Zones[zone].alliance = {}
         Zones[zone].points = 0
         return {
             id = 'admin_zoes',

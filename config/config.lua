@@ -2,7 +2,7 @@ Config = Config or {}
 
 Config.MaxAlliances = 3
 
-Config.AlertGang = 10               -- Percentage for alerting gang members
+Config.AlertGang = 100              -- Percentage for alerting gang members
 
 Config.MaximumPoints = 1500         -- Maximum points a gang can have
 Config.PointsAddAmount = 1          -- How many points to add when selling drugs

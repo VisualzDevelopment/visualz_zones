@@ -26,44 +26,46 @@ CreateThread(function()
     end
 end)
 
-CreateThread(function()
-    while true do
-        Wait(ESX.Math.Round(Config.ReducePointsCheck, 0) * 60 * 1000)
+if Config.ReducePointsEnabled then
+    CreateThread(function()
+        while true do
+            Wait(ESX.Math.Round(Config.ReducePointsCheck, 0) * 60 * 1000)
 
-        for _, zone in pairs(Zones) do
-            local zoneLastTimeSold = ESX.Math.Round(zone.last_time_sold / 1000, 0)
-            local reducePointsTimerInSec = (Config.ReducePointsTimer * 60) * 60
+            for _, zone in pairs(Zones) do
+                local zoneLastTimeSold = ESX.Math.Round(zone.last_time_sold / 1000, 0)
+                local reducePointsTimerInSec = (Config.ReducePointsTimer * 60) * 60
 
-            if zoneLastTimeSold + reducePointsTimerInSec <= os.time() then
-                if zone.points > 0 then
-                    local owner = zone.owner or "Ingen ejer"
-                    local discordMessage =
-                        "**Zone:** " .. zone.zone .. " - " .. Config.Zones[zone.zone] .. "\n" ..
-                        "**Points:** " .. zone.points .. "\n" ..
-                        "**Ejer:** " .. owner .. "\n\n" ..
-
-                        "**Sidst solgt i zonen:** " .. os.date("%d/%m/%Y %H:%M:%S", zoneLastTimeSold) .. "\n" ..
-                        "**Fjernet points:** " .. Config.PointsRemoveAmount .. "\n" ..
-                        "**Nye points:** " .. zone.points - Config.PointsRemoveAmount .. "\n"
-
-                    SendLog(Logs["ReducePoints"], 2829617, "Points fjernet", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
-                    zone.points = zone.points - Config.PointsRemoveAmount
+                if zoneLastTimeSold + reducePointsTimerInSec <= os.time() then
                     if zone.points > 0 then
-                        MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
-                            zone.points, zone.zone
-                        })
-                    else
-                        MySQL.update.await('UPDATE visualz_zones SET points = ?, owner = ?, alliance = ? WHERE zone = ?', {
-                            zone.points, nil, "[]", zone.zone
-                        })
-                    end
-                else
+                        local owner = zone.owner or "Ingen ejer"
+                        local discordMessage =
+                            "**Zone:** " .. zone.zone .. " - " .. Config.Zones[zone.zone] .. "\n" ..
+                            "**Points:** " .. zone.points .. "\n" ..
+                            "**Ejer:** " .. owner .. "\n\n" ..
 
+                            "**Sidst solgt i zonen:** " .. os.date("%d/%m/%Y %H:%M:%S", zoneLastTimeSold) .. "\n" ..
+                            "**Fjernet points:** " .. Config.PointsRemoveAmount .. "\n" ..
+                            "**Nye points:** " .. zone.points - Config.PointsRemoveAmount .. "\n"
+
+                        SendLog(Logs["ReducePoints"], 2829617, "Points fjernet", discordMessage, "Visualz Development | Visualz.dk | " .. os.date("%d/%m/%Y %H:%M:%S"))
+                        zone.points = zone.points - Config.PointsRemoveAmount
+                        if zone.points > 0 then
+                            MySQL.update.await('UPDATE visualz_zones SET points = ? WHERE zone = ?', {
+                                zone.points, zone.zone
+                            })
+                        else
+                            MySQL.update.await('UPDATE visualz_zones SET points = ?, owner = ?, alliance = ? WHERE zone = ?', {
+                                zone.points, nil, "[]", zone.zone
+                            })
+                        end
+                    else
+
+                    end
                 end
             end
         end
-    end
-end)
+    end)
+end
 
 function IsAllowedGang(gang)
     for _, v in pairs(Config.AllowedGangs) do

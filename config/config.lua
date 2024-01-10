@@ -2,17 +2,17 @@ Config = Config or {}
 
 Config.MaxAlliances = 3
 
-Config.AlertGang = 10
+Config.AlertGang = 10               -- Percentage for alerting gang members
 
-Config.MaximumPoints = 1500
-Config.PointsAddAmount = 1
-Config.PointsRemoveAmount = 1
+Config.MaximumPoints = 1500         -- Maximum points a gang can have
+Config.PointsAddAmount = 1          -- How many points to add when selling drugs
+Config.PointsRemoveAmount = 1       -- How many points to remove when a opposing gang member is selling drugs
 
-Config.PopularDrugMultiplier = 1.05
-Config.OwnedZoneMultiplier = 1.1
+Config.PopularDrugMultiplier = 1.05 -- Multiplier for popular drugs
+Config.OwnedZoneMultiplier = 1.1    -- Multiplier for selling in your own zone
 
-Config.AdminCommand = "adminzones"
-Config.ZoneCommand = "zone"
+Config.AdminCommand = "adminzones"  -- Admin command to open the admin menu
+Config.ZoneCommand = "zone"         -- Command to open the zone menu
 
 -- Math Example: Config.ReducePointsAmount = 1
 -- Note: This is per 10 minutes and will be rounded to the nearest whole number
@@ -23,11 +23,11 @@ Config.ZoneCommand = "zone"
 -- Per week: 60 * 24 * 7 / Config.ReducePointsCheck * Config.ReducePointsAmount = 1008
 -- Per month: 60 * 24 * 30 / Config.ReducePointsCheck * Config.ReducePointsAmount = 4320
 Config.ReducePointsEnabled = true
-Config.ReducePointsCheck = 10 -- How often in minutes to check for reducing points rounds to nearest whole number
-Config.ReducePointsTimer = 1  -- How long in hours before the points start to reduce
-Config.ReducePointsAmount = 1 -- Will run every 10 minutes and remove Config.ReducePointsAmount points
+Config.ReducePointsCheck = 10      -- How often in minutes to check for reducing points rounds to nearest whole number
+Config.ReducePointsTimer = 1       -- How long in hours before the points start to reduce
+Config.ReducePointsAmount = 1      -- Will run every 10 minutes and remove Config.ReducePointsAmount points
 
-Config.PhoneContactName = "Ukendt"
+Config.PhoneContactName = "Ukendt" -- Name of the contact in the phone when alerting gang members
 
 Config.AllowedGangs = {
     "police",
@@ -40,7 +40,7 @@ Config.AllowedGroups = { -- Groups for admin menu
     "superadmin"
 }
 
-Config.PopularZoneDrugs = {
+Config.PopularZoneDrugs = { --
     ["BEACH"] = { "burger" },
     ["DTVINE"] = { "water" }
 }

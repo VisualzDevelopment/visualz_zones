@@ -241,7 +241,7 @@ function AddPoints(xPlayer, zone, drugPrice, drugType)
                 })
                 break
             end
-            if (v.owner == gang and v.points == Config.MaximumPoints) or (alliance and v.points == Config.MaximumPoints) then
+            if (v.owner == gang and v.points >= Config.MaximumPoints) or (alliance and v.points >= Config.MaximumPoints) then
                 xPlayer.addAccountMoney('black_money', math.floor(OwnedZonePrice))
                 hasGottenControlReward = true
                 if CheckControlReward(drugType, zone, xPlayer, popularDrugPrice) then
